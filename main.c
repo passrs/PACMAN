@@ -6,14 +6,18 @@
 #define LINHA 21
 #define COLUNA 30
 #define QTD_FANTASMAS 5
+
 #define RED     "\x1b[31m"
-#define GREEN   "\x1b[32m"
-#define YELLOW  "\x1b[33m"
+#define ROSA    "\033[38;5;205m"
+#define LARANJA "\033[38;5;208m"
+#define YELLOW  "\033[33m"
 #define BLUE    "\x1b[34m"
-#define MAGENTA "\x1b[35m"
+#define VERDE   "\033[32m"
 #define RESET   "\x1b[0m"
 
 char mapa[LINHA][COLUNA];
+
+//
 
 typedef struct {
 	char token;
@@ -30,6 +34,8 @@ typedef struct {
 	int ultima_jogada;
 } Jogador;
 
+//calcula a pontuação máxima do jogador na partída
+
 int conta_pontuacao_maxima() {
 	int total_comidas = 0;
 	for (int i = 1; i < LINHA - 1; i++) {
@@ -42,11 +48,15 @@ int conta_pontuacao_maxima() {
 	return total_comidas * 100;
 }
 
+//funçao que decide aleatóriamente qual mapa será escolhido
+
 int escolhe_mapa(int *mapa_escolhido) {
 	srand(time(NULL));
 	*mapa_escolhido = (rand() % 3) + 1;
 	return *mapa_escolhido;
 }
+
+//gera o mape escolhido com base no valor da funcao "escolha_mapa"
 
 void gera_mapa(int *mapa_escolhido, int *pmax) {
 	FILE *arquivo = fopen("mapas.txt", "r");
@@ -54,6 +64,12 @@ void gera_mapa(int *mapa_escolhido, int *pmax) {
 		printf("Erro ao abrir o arquivo mapas.txt\n");
 		exit(1);
 	}
+
+	//com base no número obtido da funcao "escolha_mapa", irá selecionar a faixa das linhas
+	// do arquivo "mapas.txt", sendo:
+	// mapa_1: da linha 5 até a linha 25
+	// mapa_2: da linha 30 até a linha 50
+	// mapa_3: da linha 55 até a linha 75
 
 	int linhaI_mapa = (*mapa_escolhido == 1) ? 5 : (*mapa_escolhido == 2) ? 30 : 55;
 	int linhaF_mapa = (*mapa_escolhido == 1) ? 25 : (*mapa_escolhido == 2) ? 50 : 75;  
@@ -81,7 +97,22 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 			for (int k = 0; k < QTD_FANTASMAS; k++) {
 				if (fantasmas[k].x == i && fantasmas[k].y == j) {
 					//colca aq os casos das cores SWITCH (K)
-					printf("%s%c%s ", RED, fantasmas[k].token, RESET);
+					switch (k)
+					{
+					case 0:
+						printf("%s%c%s ", RED, fantasmas[k].token, RESET); break;
+					case 1: 
+						printf("%s%c%s ", ROSA, fantasmas[k].token, RESET); break;
+					case 2: 
+						printf("%s%c%s ", LARANJA, fantasmas[k].token, RESET); break;
+					case 3: 
+						printf("%s%c%s ", BLUE, fantasmas[k].token, RESET); break;
+					case 4: 
+						printf("%s%c%s ", VERDE, fantasmas[k].token, RESET); break;	
+					
+					default:
+						break;
+					}
 					tem_fantasma = 1;
 					break;
 				}
@@ -89,7 +120,7 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 			if (tem_fantasma == 1) continue;
 
 			if (jogador->x == i && jogador->y == j) {
-				printf("%c ", jogador->token);
+				printf(YELLOW "%c" RESET " ", jogador->token);
 			} else {
 				if (j == 0) {
 					printf("              %c ", mapa[i][j]);
