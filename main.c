@@ -17,14 +17,14 @@
 
 char mapa[LINHA][COLUNA];
 
-//
 
 typedef struct {
 	char token;
 	int x;
 	int y;
-	int delay_primario;
-	int se_moveu;
+	int delay;
+	int perfil;
+	int ultima_direcao;
 } Fantasma;
 
 typedef struct {
@@ -96,34 +96,42 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 			tem_fantasma = 0;
 			for (int k = 0; k < QTD_FANTASMAS; k++) {
 				if (fantasmas[k].x == i && fantasmas[k].y == j) {
-					//colca aq os casos das cores SWITCH (K)
-					switch (k)
-					{
-					case 0:
-						printf("%s%c%s ", RED, fantasmas[k].token, RESET); break;
-					case 1: 
-						printf("%s%c%s ", ROSA, fantasmas[k].token, RESET); break;
-					case 2: 
-						printf("%s%c%s ", LARANJA, fantasmas[k].token, RESET); break;
-					case 3: 
-						printf("%s%c%s ", BLUE, fantasmas[k].token, RESET); break;
-					case 4: 
-						printf("%s%c%s ", VERDE, fantasmas[k].token, RESET); break;	
-					
-					default:
-						break;
+					switch (k) {
+						case 0:
+							printf("%s%c%s ", RED, fantasmas[k].token, RESET);
+							break;
+						case 1: 
+							printf("%s%c%s ", ROSA, fantasmas[k].token, RESET);
+							break;
+						case 2: 
+							printf("%s%c%s ", LARANJA, fantasmas[k].token, RESET);
+							break;
+						case 3: 
+							printf("%s%c%s ", BLUE, fantasmas[k].token, RESET);
+							break;
+						case 4: 
+							printf("%s%c%s ", VERDE, fantasmas[k].token, RESET);
+							break;	
+						default:
+							break;
 					}
 					tem_fantasma = 1;
 					break;
 				}
 			}
-			if (tem_fantasma == 1) continue;
+
+			if (tem_fantasma == 1) {
+				continue;
+			}
 
 			if (jogador->x == i && jogador->y == j) {
 				printf(YELLOW "%c" RESET " ", jogador->token);
+				if (jogador->y == 0){
+					printf("               ");
+					}
 			} else {
 				if (j == 0) {
-					printf("              %c ", mapa[i][j]);
+					printf("               %c ", mapa[i][j]);
 				} else {
 					printf("%c ", mapa[i][j]);
 				} 
@@ -142,86 +150,114 @@ int verifica_movimento_valido(int *pos_x, int *pos_y, int direcao) {
 	}
 	return 0;
 }
-
-int calcula_distancia_fantasma(int *pos_x_f, int *pos_y_f, int pos_x_alvo, int pos_y_alvo, int direcao) {
+void faz_movimento(int *pos_x, int *pos_y, int direcao) {
+	if (verifica_movimento_valido(pos_x, pos_y, direcao)) {		
+		switch (direcao) {
+			case 1: 
+				*pos_x = *pos_x < 1 ? 20 : *pos_x - 1; 
+				break;
+			case 2: 
+				*pos_x = *pos_x > LINHA-2 ? 0 : *pos_x + 1; 
+				break;
+			case 3: 
+				*pos_y -= 1; 
+				break;
+			case 4: 
+				*pos_y += 1;
+				break;
+		}
+	}
+}
+int calcula_distancia_fantasma(int *pos_x_f, int *pos_y_f, int *pos_x_j, int *pos_y_j, int direcao) {
 	// cima = 1 ; baixo = 2 ; esqeurda = 3 ; direita = 4
 	int prox_x = *pos_x_f;
 	int prox_y = *pos_y_f;
 
-	if (direcao == 1) prox_x--;
-	else if (direcao == 2) prox_x++;   
-	else if (direcao == 3) prox_y--;   
-	else if (direcao == 4) prox_y++;
+	if (direcao == 1) {
+		prox_x--;}
+	else if (direcao == 2) {
+		prox_x++;}
+	else if (direcao == 3) {
+		prox_y--;}  
+	else if (direcao == 4) {
+		prox_y++;}
 
 	if (verifica_movimento_valido(pos_x_f, pos_y_f, direcao) == 1) {
-		int m = (prox_x > pos_x_alvo) ? prox_x - pos_x_alvo : pos_x_alvo - prox_x;
-		int n = (prox_y > pos_y_alvo) ? prox_y - pos_y_alvo : pos_y_alvo - prox_y;
+		int m = (prox_x > *pos_x_j) ? prox_x - *pos_x_j : *pos_x_j - prox_x;
+		int n = (prox_y > *pos_y_j) ? prox_y - *pos_y_j : *pos_y_j - prox_y;
 		return m + n;
 	}
-	return 9999;
+	return 999;
 }
-
-int define_direcao_fantasma(int *pos_x_f, int *pos_y_f, int pos_x_alvo, int pos_y_alvo) {
+void muda_perfil(Fantasma fantasmas[], int *jogadas) {
+	for (int i = 0; i < QTD_FANTASMAS; i++) {
+		if (fantasmas[i].delay != 0 && *jogadas % fantasmas[i].delay == 0) {
+			fantasmas[i].perfil *= -1;
+		}
+	}
+}
+int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	int dists[4];
-	dists[0] = calcula_distancia_fantasma(pos_x_f, pos_y_f, pos_x_alvo, pos_y_alvo, 1);
-	dists[1] = calcula_distancia_fantasma(pos_x_f, pos_y_f, pos_x_alvo, pos_y_alvo, 2);
-	dists[2] = calcula_distancia_fantasma(pos_x_f, pos_y_f, pos_x_alvo, pos_y_alvo, 3);
-	dists[3] = calcula_distancia_fantasma(pos_x_f, pos_y_f, pos_x_alvo, pos_y_alvo, 4);
+	int aux = 0;
 
-	int melhor_dist = 9999;
+	dists[0] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 1);
+	dists[1] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 2);
+	dists[2] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 3);
+	dists[3] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 4);
+	
+	// 1. Determina a direção oposta (meia-volta)
+	switch (fantasma->ultima_direcao) {
+		case 1: aux = 2; break; // cima <-> baixo
+		case 2: aux = 1; break;
+		case 3: aux = 4; break; // esquerda <-> direita
+		case 4: aux = 3; break;
+		default: aux = 0; break;
+	}
+
+	int melhor_dist = 999;
 	int melhor_direcao = 0;
 
-	for (int d = 0; d < 4; d++) {
-		if (dists[d] < melhor_dist) {
-			melhor_dist = dists[d];
-			melhor_direcao = d + 1;
+	// busca a melhor direção ignorando a meia volta
+	for (int i = 0; i < 4; i++) {
+		int dir_atual = i + 1;
+
+		if (dists[i] != 999 && dir_atual != aux) {
+			if (dists[i] < melhor_dist) {
+				melhor_dist = dists[i];
+				melhor_direcao = dir_atual;
+			}
 		}
 	}
 
+	//trata beco sem saída 
+	if (melhor_direcao == 0 && aux != 0 && dists[aux - 1] != 999) {
+		melhor_direcao = aux;
+	}
+	
+	fantasma->ultima_direcao = melhor_direcao;
 	return melhor_direcao;
 }
 
-void faz_movimento(int *pos_x, int *pos_y, int direcao) {
-	if (verifica_movimento_valido(pos_x, pos_y, direcao)) {		
-		switch (direcao) {
-			case 1: *pos_x -= 1; break;
-			case 2: *pos_x += 1; break;
-			case 3: *pos_y -= 1; break;
-			case 4: *pos_y += 1; break;
-		}
-	}
-}
 
-void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, int *jogadas, int dir_jogador) {
-	int mov;
+void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, int *jogadas) {
+	muda_perfil(fantasmas, jogadas);
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
-		if (fantasmas[i].delay_primario > *jogadas) continue;
+		if (fantasmas[i].perfil == 1) {
+			int px = *pos_x_j;
+			int py = *pos_y_j;
 
-		int alvo_x = *pos_x_j;
-		int alvo_y = *pos_y_j;
+			switch (i) {
+				case 1: px += 3; break; //flaqueador superior
+				case 0: px -= 3; break; //flaqueador inferior
+				case 3: py += 5; break; //flaqueador direita
+				case 4: py -= 5; break; //flaqueador esquerda
+				default: break;
+			}
 
-		switch (i) {
-			case 0: // Caçador Direto
-				break;
-			case 1: // Emboscador: Mira 3 blocos à frente do jogador
-				if (dir_jogador == 1) alvo_x -= 3;
-				else if (dir_jogador == 2) alvo_x += 3;
-				else if (dir_jogador == 3) alvo_y -= 3;
-				else if (dir_jogador == 4) alvo_y += 3;
-				break;
-			case 2: // Flanqueador Esquerdo
-				alvo_y -= 3;
-				break;
-			case 3: // Flanqueador Direito
-				alvo_y += 3;
-				break;
-			default: // caçador auxiliar
-				alvo_x += 2;
-				break;
+			faz_movimento(&fantasmas[i].x, &fantasmas[i].y, define_direcao_fantasma(&fantasmas[i], &px, &py));
+		} else if (*jogadas > fantasmas[i].delay){
+			faz_movimento(&fantasmas[i].x, &fantasmas[i].y, define_direcao_fantasma(&fantasmas[i], pos_x_j, pos_y_j));
 		}
-
-		mov = define_direcao_fantasma(&fantasmas[i].x, &fantasmas[i].y, alvo_x, alvo_y);
-		faz_movimento(&fantasmas[i].x, &fantasmas[i].y, mov);
 	}
 }
 
@@ -263,11 +299,11 @@ int main() {
 	Jogador jogador = {'P', 15, 13, 3};
 
 	Fantasma fantasmas[QTD_FANTASMAS] = {
-		{'G', 9, 11, 3, 0}, 
-		{'G', 9, 12, 5, 0}, 
-		{'G', 9, 13, 7, 0}, 
-		{'G', 9, 14, 9, 0}, 
-		{'G', 9, 15, 11, 0}
+		{'G', 9, 11, 25, -1, 1}, 
+		{'G', 9, 12, 35, -1, 1}, 
+		{'G', 9, 13, 10, 1, 1}, 
+		{'G', 9, 14, 35, -1, 1}, 
+		{'G', 9, 15, 25, -1, 1}
 	};
 	
 	escolhe_mapa(&mapa_escolhido);
@@ -286,7 +322,16 @@ int main() {
 		faz_movimento(&jogador.x, &jogador.y, jogador.ultima_jogada);
 		
 		jogadas += 1;
-		faz_movimento_fantasma(fantasmas, &jogador.x, &jogador.y, &jogadas, jogador.ultima_jogada);
+		
+		if (verifica_estado_jogo(&jogador, fantasmas, &pontos, &pmax) == 1){
+			limpa_tela();
+			printa_mapa(&jogador, fantasmas);
+			puts("----------------------------------------------------------------------------------");
+			puts("                                    VOCE PERDEU!!!");
+			puts("----------------------------------------------------------------------------------");
+			break;
+		}
+		faz_movimento_fantasma(fantasmas, &jogador.x, &jogador.y, &jogadas);
 		
 		aplica_pontuacao(&jogador.x, &jogador.y, &pontos);
 		
@@ -299,12 +344,7 @@ int main() {
 		printf("                               PONTOS: %d  / %d \n", pontos, pmax);
 		puts("----------------------------------------------------------------------------------");
 	}
-
-	if (verifica_estado_jogo(&jogador, fantasmas, &pontos, &pmax) == 1) {
-		puts("----------------------------------------------------------------------------------");
-		puts("                                    VOCE PERDEU!!!");
-		puts("----------------------------------------------------------------------------------");	
-	} else if (verifica_estado_jogo(&jogador, fantasmas, &pontos, &pmax) == 2) {
+	if (verifica_estado_jogo(&jogador, fantasmas, &pontos, &pmax) == 2) {
 		puts("----------------------------------------------------------------------------------");
 		puts("                                    VOCE VENCEU!!!");
 		puts("----------------------------------------------------------------------------------");	
