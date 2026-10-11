@@ -34,7 +34,7 @@ typedef struct {
 	int ultima_jogada;
 } Jogador;
 
-//calcula a pontuação máxima do jogador na partída
+// calcula a pontuação máxima do jogador na partída
 
 int conta_pontuacao_maxima() {
 	int total_comidas = 0;
@@ -48,7 +48,7 @@ int conta_pontuacao_maxima() {
 	return total_comidas * 100;
 }
 
-//funçao que decide aleatóriamente qual mapa será escolhido
+// funçao que decide aleatóriamente qual mapa será escolhido
 
 int escolhe_mapa(int *mapa_escolhido) {
 	srand(time(NULL));
@@ -56,7 +56,7 @@ int escolhe_mapa(int *mapa_escolhido) {
 	return *mapa_escolhido;
 }
 
-//gera o mape escolhido com base no valor da funcao "escolha_mapa"
+// gera o mapa escolhido com base no valor da funcao "escolha_mapa"
 
 void gera_mapa(int *mapa_escolhido, int *pmax) {
 	FILE *arquivo = fopen("mapas.txt", "r");
@@ -65,7 +65,7 @@ void gera_mapa(int *mapa_escolhido, int *pmax) {
 		exit(1);
 	}
 
-	//com base no número obtido da funcao "escolha_mapa", irá selecionar a faixa das linhas
+	// com base no número obtido da funcao "escolha_mapa", irá selecionar a faixa das linhas
 	// do arquivo "mapas.txt", sendo:
 	// mapa_1: da linha 5 até a linha 25
 	// mapa_2: da linha 30 até a linha 50
@@ -87,6 +87,9 @@ void gera_mapa(int *mapa_escolhido, int *pmax) {
 	*pmax = conta_pontuacao_maxima();
 	fclose(arquivo);	
 } 
+
+// funcao responsavel por fazer o mapa, os fantasmas e o jogador aparecerem no terminal.
+// o 'RESET' e as constantes com nome de cores servem apenas para mudar a cor dos fantasmas e do jogador.
 
 void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 	int tem_fantasma;
@@ -141,6 +144,9 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 	puts("");
 }
 
+// essa funcao é responsavel por ler a posiçao que o jogador quer ir e verificar
+// se nao tem nenhuma parede naquela posiçao 
+
 int verifica_movimento_valido(int *pos_x, int *pos_y, int direcao) {
 	switch (direcao) {
 		case 1: if (mapa[*pos_x - 1][*pos_y] == '#') return 0; return 1;
@@ -150,6 +156,9 @@ int verifica_movimento_valido(int *pos_x, int *pos_y, int direcao) {
 	}
 	return 0;
 }
+
+// essa funcao, após verificar se o movimento é valido, atualizando e retornando a nova posiçao do jogador.
+
 void faz_movimento(int *pos_x, int *pos_y, int direcao) {
 	if (verifica_movimento_valido(pos_x, pos_y, direcao)) {		
 		switch (direcao) {
@@ -168,18 +177,26 @@ void faz_movimento(int *pos_x, int *pos_y, int direcao) {
 		}
 	}
 }
+
+// essa funcao recebe os 2 valores das coordenadas do jogador e de cada fantasma para poder calcular e retornar
+// a menor distancia entre o jogador e cada um dos fantasmas
+
 int calcula_distancia_fantasma(int *pos_x_f, int *pos_y_f, int *pos_x_j, int *pos_y_j, int direcao) {
-	// cima = 1 ; baixo = 2 ; esqeurda = 3 ; direita = 4
+
+	// como estamos manipulando coordenadas em uma matriz as relaçoes para alterar as coordenadas se comportam de uma maneira diferente.
+	// quando queremos que algo se mecha na horizontal é preciso que adicionar ou subtrair o número de sua coluna
+	// e para alterar a posiçao na vertical é preciso adicionar ou subtrair o número de sua linha
+
 	int prox_x = *pos_x_f;
 	int prox_y = *pos_y_f;
 
-	if (direcao == 1) {
+	if (direcao == 1) { // 1 = cima (-1 na linha) 
 		prox_x--;}
-	else if (direcao == 2) {
+	else if (direcao == 2) { // 2 = baixo (+1 na linha)
 		prox_x++;}
-	else if (direcao == 3) {
+	else if (direcao == 3) { // 3 = esquerda (-1 na coluna)
 		prox_y--;}  
-	else if (direcao == 4) {
+	else if (direcao == 4) { // 4 = direita (+1 na coluna)
 		prox_y++;}
 
 	if (verifica_movimento_valido(pos_x_f, pos_y_f, direcao) == 1) {
@@ -189,6 +206,9 @@ int calcula_distancia_fantasma(int *pos_x_f, int *pos_y_f, int *pos_x_j, int *po
 	}
 	return 999;
 }
+
+// essa funcao é responsavel por alterar o perfil de cada fantasma.(O perfil é o responsavel por determinar o comportamento de cada fantasmas)
+
 void muda_perfil(Fantasma fantasmas[], int *jogadas) {
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
 		if (fantasmas[i].delay != 0 && *jogadas % fantasmas[i].delay == 0) {
@@ -196,6 +216,9 @@ void muda_perfil(Fantasma fantasmas[], int *jogadas) {
 		}
 	}
 }
+
+// essa funcao é reponsavel por determinar a direçao que os fantasmas vao seguir para chegar no jogador
+
 int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	int dists[4];
 	int aux = 0;
@@ -238,6 +261,7 @@ int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	return melhor_direcao;
 }
 
+// essa funcao realiza os movimentos dos fantasmas com base na posiçao do jogador e no perfil de cada fantasma
 
 void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, int *jogadas) {
 	muda_perfil(fantasmas, jogadas);
@@ -261,6 +285,8 @@ void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, in
 	}
 }
 
+// essa funcao le a direçao do jogador
+
 int direcao_jogador(int *ultima_jogada, char *input) {
 	switch (*input) {
 		case 'W': case 'w': return 1;
@@ -272,6 +298,9 @@ int direcao_jogador(int *ultima_jogada, char *input) {
 	}
 	return *ultima_jogada;
 }
+
+// funcao simples que a todo momento verifica o estado do jogo, verificando para cada fantasma se a posicao deles é igual a do jogador
+// se sim retorna 1, se nao retorna 0 e 2 para caso o jogador consiga coletar todos os pontos do mapa
 
 int verifica_estado_jogo(Jogador *jogador, Fantasma fantasmas[], int *pontos, int *pmax) {
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
