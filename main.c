@@ -1,3 +1,9 @@
+//TRABALHO DE CONSTRUÇÃO DE ALGORITMOS - P2
+//PROFESSOR: EUGÊNIO DA SILVA
+//ALUNOS: DANIEL VAZ LOUREIRO ALVEZ DA CONCEIÇÃO
+//        PAULO ANDRÉ SOTERO DA SILVA RIBEIRO
+//TURMA: CC
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -6,16 +12,15 @@
 #define LINHA 21
 #define COLUNA 30
 #define QTD_FANTASMAS 5
+#define VERMELHO "\x1b[31m"
+#define ROSA     "\033[38;5;205m"
+#define LARANJA  "\033[38;5;208m"
+#define AMARELO  "\033[33m"
+#define AZUL     "\x1b[34m"
+#define VERDE    "\033[32m"
+#define RESET    "\x1b[0m"
 
-#define RED     "\x1b[31m"
-#define ROSA    "\033[38;5;205m"
-#define LARANJA "\033[38;5;208m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\x1b[34m"
-#define VERDE   "\033[32m"
-#define RESET   "\x1b[0m"
-
-char mapa[LINHA][COLUNA];
+char mapa[LINHA][COLUNA]; //VARIAVEL GLOBAL QUE ARMAZENA O MAPA
 
 
 typedef struct {
@@ -34,8 +39,7 @@ typedef struct {
 	int ultima_jogada;
 } Jogador;
 
-// calcula a pontuação máxima do jogador na partída
-
+// calcula a pontuação máxima que o jogador pode alcançar na partida
 int conta_pontuacao_maxima() {
 	int total_comidas = 0;
 	for (int i = 1; i < LINHA - 1; i++) {
@@ -48,8 +52,7 @@ int conta_pontuacao_maxima() {
 	return total_comidas * 100;
 }
 
-// funçao que decide aleatóriamente qual mapa será escolhido
-
+// funçao que decide aleatoriamente qual mapa será escolhido
 int escolhe_mapa(int *mapa_escolhido) {
 	srand(time(NULL));
 	*mapa_escolhido = (rand() % 3) + 1;
@@ -57,7 +60,6 @@ int escolhe_mapa(int *mapa_escolhido) {
 }
 
 // gera o mapa escolhido com base no valor da funcao "escolha_mapa"
-
 void gera_mapa(int *mapa_escolhido, int *pmax) {
 	FILE *arquivo = fopen("mapas.txt", "r");
 	if (arquivo == NULL) {
@@ -65,8 +67,7 @@ void gera_mapa(int *mapa_escolhido, int *pmax) {
 		exit(1);
 	}
 
-	// com base no número obtido da funcao "escolha_mapa", irá selecionar a faixa das linhas
-	// do arquivo "mapas.txt", sendo:
+	// com base no número obtido da funcao "escolha_mapa", irá selecionar a faixa das linhas do arquivo "mapas.txt", sendo:
 	// mapa_1: da linha 5 até a linha 25
 	// mapa_2: da linha 30 até a linha 50
 	// mapa_3: da linha 55 até a linha 75
@@ -88,9 +89,8 @@ void gera_mapa(int *mapa_escolhido, int *pmax) {
 	fclose(arquivo);	
 } 
 
-// funcao responsavel por fazer o mapa, os fantasmas e o jogador aparecerem no terminal.
-// o 'RESET' e as constantes com nome de cores servem apenas para mudar a cor dos fantasmas e do jogador.
-
+// funcao responsavel por mostrar o mapa na tela.
+// o 'RESET' e as constantes com nome de cores servem apenas para mudar a cor dos fantasmas e do jogador
 void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 	int tem_fantasma;
 	for (int i = 0; i < LINHA; i++) {
@@ -101,7 +101,7 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 				if (fantasmas[k].x == i && fantasmas[k].y == j) {
 					switch (k) {
 						case 0:
-							printf("%s%c%s ", RED, fantasmas[k].token, RESET);
+							printf("%s%c%s ", VERMELHO, fantasmas[k].token, RESET);
 							break;
 						case 1: 
 							printf("%s%c%s ", ROSA, fantasmas[k].token, RESET);
@@ -110,7 +110,7 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 							printf("%s%c%s ", LARANJA, fantasmas[k].token, RESET);
 							break;
 						case 3: 
-							printf("%s%c%s ", BLUE, fantasmas[k].token, RESET);
+							printf("%s%c%s ", AZUL, fantasmas[k].token, RESET);
 							break;
 						case 4: 
 							printf("%s%c%s ", VERDE, fantasmas[k].token, RESET);
@@ -128,7 +128,7 @@ void printa_mapa(Jogador *jogador, Fantasma fantasmas[]) {
 			}
 
 			if (jogador->x == i && jogador->y == j) {
-				printf(YELLOW "%c" RESET " ", jogador->token);
+				printf(AMARELO "%c" RESET " ", jogador->token);
 				if (jogador->y == 0){
 					printf("               ");
 					}
@@ -207,8 +207,7 @@ int calcula_distancia_fantasma(int *pos_x_f, int *pos_y_f, int *pos_x_j, int *po
 	return 999;
 }
 
-// essa funcao é responsavel por alterar o perfil de cada fantasma.(O perfil é o responsavel por determinar o comportamento de cada fantasmas)
-
+// essa funcao é responsavel por alterar o perfil de cada fantasma.(O perfil é o responsavel por determinar o comportamento de cada fantasma)
 void muda_perfil(Fantasma fantasmas[], int *jogadas) {
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
 		if (fantasmas[i].delay != 0 && *jogadas % fantasmas[i].delay == 0) {
@@ -218,7 +217,6 @@ void muda_perfil(Fantasma fantasmas[], int *jogadas) {
 }
 
 // essa funcao é reponsavel por determinar a direçao que os fantasmas vao seguir para chegar no jogador
-
 int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	int dists[4];
 	int aux = 0;
@@ -228,11 +226,11 @@ int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	dists[2] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 3);
 	dists[3] = calcula_distancia_fantasma(&fantasma->x, &fantasma->y, pos_x_j, pos_y_j, 4);
 	
-	// 1. Determina a direção oposta (meia-volta)
+	//determina a direção oposta dada a ultima direção
 	switch (fantasma->ultima_direcao) {
-		case 1: aux = 2; break; // cima <-> baixo
+		case 1: aux = 2; break; //cima <-> baixo
 		case 2: aux = 1; break;
-		case 3: aux = 4; break; // esquerda <-> direita
+		case 3: aux = 4; break; //esquerda <-> direita
 		case 4: aux = 3; break;
 		default: aux = 0; break;
 	}
@@ -240,7 +238,7 @@ int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	int melhor_dist = 999;
 	int melhor_direcao = 0;
 
-	// busca a melhor direção ignorando a meia volta
+	//busca a melhor direção ignorando a meia volta
 	for (int i = 0; i < 4; i++) {
 		int dir_atual = i + 1;
 
@@ -252,7 +250,7 @@ int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 		}
 	}
 
-	//trata beco sem saída 
+	//trata beco sem saída (meia volta é a unica opção possível)
 	if (melhor_direcao == 0 && aux != 0 && dists[aux - 1] != 999) {
 		melhor_direcao = aux;
 	}
@@ -261,8 +259,7 @@ int define_direcao_fantasma(Fantasma *fantasma, int *pos_x_j, int *pos_y_j) {
 	return melhor_direcao;
 }
 
-// essa funcao realiza os movimentos dos fantasmas com base na posiçao do jogador e no perfil de cada fantasma
-
+//essa funcao realiza os movimentos dos fantasmas com base na posiçao do jogador e no perfil de cada fantasma
 void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, int *jogadas) {
 	muda_perfil(fantasmas, jogadas);
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
@@ -279,14 +276,13 @@ void faz_movimento_fantasma(Fantasma fantasmas[], int *pos_x_j, int *pos_y_j, in
 			}
 
 			faz_movimento(&fantasmas[i].x, &fantasmas[i].y, define_direcao_fantasma(&fantasmas[i], &px, &py));
-		} else if (*jogadas > fantasmas[i].delay){
+		} else if (*jogadas > fantasmas[i].delay){ //só permite o fantasma se mover se o delay dele já foi atingido
 			faz_movimento(&fantasmas[i].x, &fantasmas[i].y, define_direcao_fantasma(&fantasmas[i], pos_x_j, pos_y_j));
 		}
 	}
 }
 
-// essa funcao le a direçao do jogador
-
+// lê a direçao do jogador
 int direcao_jogador(int *ultima_jogada, char *input) {
 	switch (*input) {
 		case 'W': case 'w': return 1;
@@ -299,9 +295,8 @@ int direcao_jogador(int *ultima_jogada, char *input) {
 	return *ultima_jogada;
 }
 
-// funcao simples que a todo momento verifica o estado do jogo, verificando para cada fantasma se a posicao deles é igual a do jogador
-// se sim retorna 1, se nao retorna 0 e 2 para caso o jogador consiga coletar todos os pontos do mapa
-
+// verifica o estado do jogo, verificando para cada fantasma se a posicao deles é igual a do jogador
+// retorna 1 se o jogador perdeu, 2  se ele ganhou e 0 como default
 int verifica_estado_jogo(Jogador *jogador, Fantasma fantasmas[], int *pontos, int *pmax) {
 	for (int i = 0; i < QTD_FANTASMAS; i++) {
 		if (fantasmas[i].x == jogador->x && fantasmas[i].y == jogador->y) return 1;
@@ -310,6 +305,7 @@ int verifica_estado_jogo(Jogador *jogador, Fantasma fantasmas[], int *pontos, in
 	return 0;
 }
 
+//aplica a pontuacao do jogo armazenando-a no endereço da variavel *pontos
 void aplica_pontuacao(int *pos_x, int *pos_y, int *pontos) {
 	if (mapa[*pos_x][*pos_y] == '.') {
 		mapa[*pos_x][*pos_y] = ' ';
@@ -317,6 +313,7 @@ void aplica_pontuacao(int *pos_x, int *pos_y, int *pontos) {
 	}
 }
 
+//limpa a tela do terminal
 void limpa_tela() {
 	printf("\033[H\033[J");
 }
@@ -328,11 +325,11 @@ int main() {
 	Jogador jogador = {'P', 15, 13, 3};
 
 	Fantasma fantasmas[QTD_FANTASMAS] = {
-		{'G', 9, 11, 25, -1, 1}, 
-		{'G', 9, 12, 35, -1, 1}, 
-		{'G', 9, 13, 10, 1, 1}, 
-		{'G', 9, 14, 35, -1, 1}, 
-		{'G', 9, 15, 25, -1, 1}
+		{'G', 9, 11, 35, -1, 1}, 
+		{'G', 9, 12, 100, -1, 1}, 
+		{'G', 9, 13, 0, 1, 1}, 
+		{'G', 9, 14, 100, -1, 1}, 
+		{'G', 9, 15, 35, -1, 1}
 	};
 	
 	escolhe_mapa(&mapa_escolhido);
@@ -355,6 +352,9 @@ int main() {
 		if (verifica_estado_jogo(&jogador, fantasmas, &pontos, &pmax) == 1){
 			limpa_tela();
 			printa_mapa(&jogador, fantasmas);
+			puts("----------------------------------------------------------------------------------");	
+			printf("                               PONTOS: %d  / %d \n", pontos, pmax);
+			puts("----------------------------------------------------------------------------------");	
 			puts("----------------------------------------------------------------------------------");
 			puts("                                    VOCE PERDEU!!!");
 			puts("----------------------------------------------------------------------------------");
